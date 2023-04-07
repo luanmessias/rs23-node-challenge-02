@@ -2,13 +2,13 @@ import { knex } from '../database'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import crypto from 'crypto'
-import { checkSessionIdExists } from '../middlewares/check-session-id-exists'
+import { checkUserSession } from '../middlewares/check-user-session'
 
 export async function mealsRoutes(app: FastifyInstance) {
   app.get(
     '/',
     {
-      preHandler: [checkSessionIdExists],
+      preHandler: [checkUserSession],
     },
     async (request) => {
       const { sessionId } = request.cookies
@@ -26,7 +26,7 @@ export async function mealsRoutes(app: FastifyInstance) {
   app.get(
     '/:id',
     {
-      preHandler: [checkSessionIdExists],
+      preHandler: [checkUserSession],
     },
     async (request) => {
       const { sessionId } = request.cookies
@@ -54,7 +54,7 @@ export async function mealsRoutes(app: FastifyInstance) {
   app.get(
     '/summary',
     {
-      preHandler: [checkSessionIdExists],
+      preHandler: [checkUserSession],
     },
     async () => {
       const summary = await knex('transactions').sum('amount as amount').first()

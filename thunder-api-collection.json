@@ -1,0 +1,89 @@
+{
+    "client": "Thunder Client",
+    "collectionName": "rs23-challenge-node-02",
+    "dateExported": "2023-04-07T19:10:52.374Z",
+    "version": "1.1",
+    "folders": [],
+    "requests": [
+        {
+            "_id": "85160714-defc-4bbf-8f9e-2504b3710015",
+            "colId": "948ba6d6-582b-4141-a6ea-cf4bafc73cbd",
+            "containerId": "",
+            "name": "Login",
+            "url": "http://localhost:3333/login",
+            "method": "POST",
+            "sortNum": 10000,
+            "created": "2023-04-07T15:34:56.026Z",
+            "modified": "2023-04-07T15:55:22.339Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"email\": \"john@doe.com\",\n  \"password\": \"10203040\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "036d2c02-ad0d-4c69-8cc5-1bf2d7c4d2cc",
+            "colId": "948ba6d6-582b-4141-a6ea-cf4bafc73cbd",
+            "containerId": "",
+            "name": "add user",
+            "url": "http://localhost:3333/users",
+            "method": "POST",
+            "sortNum": 30000,
+            "created": "2023-04-07T15:55:56.518Z",
+            "modified": "2023-04-07T15:58:11.372Z",
+            "headers": [],
+            "params": [],
+            "body": {
+                "type": "json",
+                "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@doe.com\",\n  \"password\": \"10203040\",\n  \"avatar\": \"https://via.placeholder.com/150x150.png?text=Avatar\"\n}",
+                "form": []
+            },
+            "tests": []
+        },
+        {
+            "_id": "4d4e5dce-94c2-4939-9f71-465ed682dc43",
+            "colId": "948ba6d6-582b-4141-a6ea-cf4bafc73cbd",
+            "containerId": "",
+            "name": "get all users",
+            "url": "http://localhost:3333/users",
+            "method": "GET",
+            "sortNum": 40000,
+            "created": "2023-04-07T16:01:14.223Z",
+            "modified": "2023-04-07T16:03:20.826Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "faff7580-9c3a-4db8-bcf1-47a0c016af6b",
+            "colId": "948ba6d6-582b-4141-a6ea-cf4bafc73cbd",
+            "containerId": "",
+            "name": "get user by id",
+            "url": "http://localhost:3333/users/9215e1c2-9ff0-4e3d-93a8-33737118449c",
+            "method": "GET",
+            "sortNum": 50000,
+            "created": "2023-04-07T16:03:27.554Z",
+            "modified": "2023-04-07T16:04:41.586Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        },
+        {
+            "_id": "43a86739-106f-49ea-8dd6-7bf87ecc577d",
+            "colId": "948ba6d6-582b-4141-a6ea-cf4bafc73cbd",
+            "containerId": "",
+            "name": "get logged user",
+            "url": "http://localhost:3333/login/me",
+            "method": "GET",
+            "sortNum": 60000,
+            "created": "2023-04-07T16:39:32.353Z",
+            "modified": "2023-04-07T16:40:58.776Z",
+            "headers": [],
+            "params": [],
+            "tests": []
+        }
+    ]
+}

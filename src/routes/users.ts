@@ -2,11 +2,11 @@ import { knex } from '../database'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import crypto from 'crypto'
-import jwt from 'jsonwebtoken'
 
 export async function usersRoutes(app: FastifyInstance) {
   app.get('/', async () => {
     const users = await knex('users').select({
+      id: 'id',
       name: 'name',
       email: 'email',
       avatar: 'avatar',
