@@ -11,33 +11,23 @@ This is the code for the Rocketseat Node Challenge 02, which is a user meal mana
 
 To install this project, clone the repository and run the following command:
 
-bashCopy code
-
 `npm install` 
 
 ## Usage
 
 To run the project in development mode, use the following command:
 
-bashCopy code
-
 `npm run dev` 
 
 To lint the code, use the following command:
-
-bashCopy code
 
 `npm run lint` 
 
 To run the tests, use the following command:
 
-bashCopy code
-
 `npm run test` 
 
 To build the project, use the following command:
-
-bashCopy code
 
 `npm run build` 
 
