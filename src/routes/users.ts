@@ -2,41 +2,54 @@ import { knex } from '../database'
 import { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import crypto from 'crypto'
+import { checkUserSession } from '../middlewares/check-user-session'
 
 export async function usersRoutes(app: FastifyInstance) {
-  app.get('/', async () => {
-    const users = await knex('users').select({
-      id: 'id',
-      name: 'name',
-      email: 'email',
-      avatar: 'avatar',
-    })
-
-    return {
-      users,
-    }
-  })
-
-  app.get('/:id', async (request) => {
-    const getUserParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
-
-    const { id } = getUserParamsSchema.parse(request.params)
-
-    const user = await knex('users')
-      .select({
+  app.get(
+    '/',
+    {
+      preHandler: [checkUserSession],
+    },
+    async () => {
+      const users = await knex('users').select({
+        id: 'id',
         name: 'name',
         email: 'email',
         avatar: 'avatar',
       })
-      .where({ id })
-      .first()
 
-    return {
-      user,
-    }
-  })
+      return {
+        users,
+      }
+    },
+  )
+
+  app.get(
+    '/:id',
+    {
+      preHandler: [checkUserSession],
+    },
+    async (request) => {
+      const getUserParamsSchema = z.object({
+        id: z.string().uuid(),
+      })
+
+      const { id } = getUserParamsSchema.parse(request.params)
+
+      const user = await knex('users')
+        .select({
+          name: 'name',
+          email: 'email',
+          avatar: 'avatar',
+        })
+        .where({ id })
+        .first()
+
+      return {
+        user,
+      }
+    },
+  )
 
   app.post('/', async (request, reply) => {
     const createUserBodySchema = z.object({

@@ -1,100 +1,174 @@
 import { knex } from '../database'
-import { FastifyInstance } from 'fastify'
+import { FastifyInstance, FastifyRequest } from 'fastify'
 import { z } from 'zod'
 import crypto from 'crypto'
 import { checkUserSession } from '../middlewares/check-user-session'
+import { checkMealOwnership } from '../middlewares/check-meal-ownership'
+
+interface userIdRequest extends FastifyRequest {
+  userId?: string
+}
+
+interface mealInterface {
+  id: string
+  name: string
+  description: string
+  dateTime: string
+  isMealDiet: boolean
+}
 
 export async function mealsRoutes(app: FastifyInstance) {
+  app.post(
+    '/',
+    {
+      preHandler: [checkUserSession],
+    },
+    async (request, reply) => {
+      const createMealBodySchema = z.object({
+        id: z.string().uuid(),
+        name: z.string(),
+        description: z.string(),
+        dateTime: z.string(),
+        isMealDiet: z.boolean(),
+        userId: z.string().uuid(),
+      })
+
+      const { userId } = request as userIdRequest
+      const { name, description, dateTime, isMealDiet } =
+        request.body as mealInterface
+
+      const meal = createMealBodySchema.parse({
+        id: crypto.randomUUID(),
+        name,
+        description,
+        dateTime,
+        isMealDiet,
+        userId,
+      })
+
+      await knex('meals').insert(meal)
+
+      return reply.status(201).send()
+    },
+  )
+
+  app.put(
+    '/:id',
+    {
+      preHandler: [checkUserSession, checkMealOwnership],
+    },
+    async (request, reply) => {
+      const updateMealBodySchema = z.object({
+        name: z.string().optional(),
+        description: z.string().optional(),
+        dateTime: z.string().optional(),
+        isMealDiet: z.boolean().optional(),
+      })
+      const { id } = request.params as { id: string }
+
+      const meal = await knex('meals').where({ id }).first()
+
+      const { name, description, dateTime, isMealDiet } =
+        updateMealBodySchema.parse(request.body)
+
+      await knex('meals')
+        .where({ id })
+        .update({
+          name: name || meal.name,
+          description: description || meal.description,
+          dateTime: dateTime || meal.dateTime,
+          isMealDiet: isMealDiet !== undefined ? isMealDiet : meal.isMealDiet,
+        })
+
+      return reply.status(200).send()
+    },
+  )
+
+  app.delete(
+    '/:id',
+    {
+      preHandler: [checkUserSession, checkMealOwnership],
+    },
+    async (request, reply) => {
+      const { id } = request.params as { id: string }
+
+      await knex('meals').where({ id }).delete()
+
+      return reply.status(200).send()
+    },
+  )
+
   app.get(
     '/',
     {
       preHandler: [checkUserSession],
     },
-    async (request) => {
-      const { sessionId } = request.cookies
+    async (request, reply) => {
+      const { userId } = request as userIdRequest
 
-      const transactions = await knex('transactions')
-        .where({ session_id: sessionId })
-        .select('*')
+      const meals = await knex('meals').where({ userId })
 
-      return {
-        transactions,
-      }
+      return reply.status(200).send(meals)
     },
   )
 
   app.get(
     '/:id',
     {
-      preHandler: [checkUserSession],
+      preHandler: [checkUserSession, checkMealOwnership],
     },
-    async (request) => {
-      const { sessionId } = request.cookies
+    async (request, reply) => {
+      const { id } = request.params as { id: string }
 
-      const getTransactionParamsSchema = z.object({
-        id: z.string().uuid(),
-      })
+      const meal = await knex('meals').where({ id }).first()
 
-      const { id } = getTransactionParamsSchema.parse(request.params)
-
-      const transaction = await knex('transactions')
-        .select('*')
-        .where({
-          id,
-          session_id: sessionId,
-        })
-        .first()
-
-      return {
-        transaction,
-      }
+      return reply.status(200).send(meal)
     },
   )
 
   app.get(
-    '/summary',
+    '/stats',
     {
       preHandler: [checkUserSession],
     },
-    async () => {
-      const summary = await knex('transactions').sum('amount as amount').first()
+    async (request, reply) => {
+      const { userId } = request as userIdRequest
 
-      return {
-        summary,
+      try {
+        const totalMeals = await knex('meals')
+          .count('* as count')
+          .where({ userId })
+          .first()
+
+        const totalDietMeals = await knex('meals')
+          .count('* as count')
+          .where({ userId, isMealDiet: true })
+          .first()
+
+        const totalNonDietMeals = await knex('meals')
+          .count('* as count')
+          .where({ userId, isMealDiet: false })
+          .first()
+
+        const bestSequencesByDay = await knex('meals')
+          .count('* as count')
+          .where({ userId, isMealDiet: true })
+          .groupByRaw('date("dateTime")')
+          .orderBy('count', 'desc')
+          .first()
+
+        const stats = {
+          totalMeals: totalMeals?.count,
+          totalDietMeals: totalDietMeals?.count,
+          totalNonDietMeals: totalNonDietMeals?.count,
+          bestSequencesByDay: bestSequencesByDay?.count,
+        }
+
+        return reply.status(200).send(stats)
+      } catch (error) {
+        console.error(error)
+        return reply.status(500).send('An error occurred')
       }
     },
   )
-
-  app.post('/', async (request, reply) => {
-    const createTransactionBodySchema = z.object({
-      title: z.string(),
-      amount: z.number(),
-      type: z.enum(['credit', 'debit']),
-    })
-
-    const { title, amount, type } = createTransactionBodySchema.parse(
-      request.body,
-    )
-
-    let sessionId = request.cookies.sessionId
-
-    if (!sessionId) {
-      sessionId = crypto.randomUUID()
-
-      reply.setCookie('sessionId', sessionId, {
-        path: '/',
-        httpOnly: true,
-        maxAge: 60 * 60 * 24 * 7, // 7 days
-      })
-    }
-
-    await knex('transactions').insert({
-      id: crypto.randomUUID(),
-      title,
-      amount: type === 'credit' ? amount : amount * -1,
-      session_id: sessionId,
-    })
-
-    return reply.status(201).send()
-  })
 }

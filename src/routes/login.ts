@@ -36,7 +36,11 @@ export async function loginRoutes(app: FastifyInstance) {
 
     const token = jwt.sign({ id: user.id }, env.JWT_SECRET)
 
-    reply.setCookie('user', token)
+    reply.setCookie('user', token, {
+      path: '/',
+      httpOnly: true,
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+    })
 
     return reply.status(201).send()
   })
